@@ -1,0 +1,9 @@
+openai
+pandas
+tiktoken
+psycopg2
+pgvector
+python-dotenv
+pypdf
+langchain
+supabase
