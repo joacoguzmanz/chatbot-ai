@@ -1,6 +1,6 @@
 import os
 import pandas as pd
-from supa_db import save_to_supabase
+from supa_db import save_to_supabase, get_from_supabase
 
 if __name__ == '__main__':
     # Document to use
@@ -8,5 +8,7 @@ if __name__ == '__main__':
 
     # pdf_to_csv_plus_embeddings(PDF_DOC)
 
-    csv_data = pd.read_csv('output.csv')
-    save_to_supabase(csv_data)
+    # csv_data = pd.read_csv('output.csv')
+    # save_to_supabase(csv_data)
+    get_from_supabase()
+    # todo - add the ability to return embeddings in text form
