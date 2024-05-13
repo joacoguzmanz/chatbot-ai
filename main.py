@@ -1,6 +1,6 @@
 import os
-import pandas as pd
-from local_db import fetch_one, insert_to_db, fetch_all, fetch_from_query
+# import pandas as pd
+from chat_utils import answer_with_completion
 
 if __name__ == '__main__':
     # Document to use
@@ -9,6 +9,5 @@ if __name__ == '__main__':
     # pdf_to_csv_plus_embeddings(PDF_DOC)
 
     user_query = input('Ingresa una pregunta: ')
-    fetched_data = fetch_from_query(user_query)
-    print(fetched_data)
-    # todo - add the ability to return embeddings in text form
+    comp_message = answer_with_completion(user_query)
+    print(comp_message)

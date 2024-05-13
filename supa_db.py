@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 # from supabase import create_client, Client
 import psycopg2
-from utils import generate_embedding
+from embeddings_utils import generate_embedding
 
 load_dotenv()
 
