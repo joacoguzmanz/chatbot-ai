@@ -1,38 +1,121 @@
 import os
 from dotenv import load_dotenv
 import psycopg2
+from utils import generate_embedding
 
 load_dotenv()
 
-conn = psycopg2.connect(
-    host=os.environ.get('DB_HOST'),
-    database=os.environ.get('DB_NAME'),
-    user=os.environ.get('DB_USER'),
-    password=os.environ.get('DB_PASSWORD'),
-    port=os.environ.get('DB_PORT')
-)
 
-# todo - correct cursor closed error
-cur = conn.cursor()
+def connect_to_db():
+    try:
+        conn = psycopg2.connect(
+            host=os.environ.get('DB_HOST'),
+            database=os.environ.get('DB_NAME'),
+            user=os.environ.get('DB_USER'),
+            password=os.environ.get('DB_PASSWORD'),
+            port=os.environ.get('DB_PORT')
+        )
+        cur = conn.cursor()
+        return conn, cur
+    except psycopg2.Error as e:
+        print('Error connecting to database: ', e)
 
 
 def insert_to_db(df):
-    for index, row in df.iterrows():
-        text = row['text']
-        embedding = row['embedding']
+    conn, cur = connect_to_db()
+    try:
+        for index, row in df.iterrows():
+            text = row['text']
+            embedding = row['embedding']
 
-        cur.execute("INSERT INTO documents (content, embedding) VALUES (%s, %s)", (text, embedding))
+            cur.execute("INSERT INTO documents (content, embedding) VALUES (%s, %s)", (text, embedding))
         conn.commit()
-    conn.close()
+    except psycopg2.Error as e:
+        print('Error inserting into database: ', e)
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
 
 
 def fetch_all():
-    cur.execute("SELECT * FROM documents")
-    rows = cur.fetchall()
-    return rows
+    conn, cur = connect_to_db()
+    try:
+        cur.execute("SELECT * FROM documents")
+        rows = cur.fetchall()
+        return rows
+    except psycopg2.Error as e:
+        print('Error fetching from database: ', e)
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
 
 
 def fetch_one():
-    cur.execute("SELECT * FROM documents")
-    row = cur.fetchone()
-    return row
+    conn, cur = connect_to_db()
+    try:
+        cur.execute("SELECT * FROM documents")
+        row = cur.fetchone()
+        return row
+    except psycopg2.Error as e:
+        print('Error fetching from database: ', e)
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+def search_matching_embeddings(match_count, match_threshold, embedding):
+    conn, cur = connect_to_db()
+    try:
+        cur.execute('select * from match_documents(%s, %s, %s); ', (embedding, match_threshold, match_count))
+        row = cur.fetchone()
+        return row
+    except psycopg2.Error as e:
+        print('Error fetching from database: ', e)
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+def simple_match(embedding):
+    conn, cur = connect_to_db()
+    try:
+        cur.execute(
+            '''SELECT id, content, 1 - (embedding::vector(1536) <=> %s::vector(1536)) AS cosine_similarity
+               FROM documents
+               ORDER BY cosine_similarity DESC LIMIT 5''',
+            (embedding,)
+        )
+        rows = cur.fetchall()
+        return rows
+    except psycopg2.Error as e:
+        print('Error fetching from database: ', e)
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+def fetch_from_query(query: str):
+    conn, cur = connect_to_db()
+    user_input = query.replace('\n', ' ')
+    embedding = generate_embedding(user_input)
+    # str(embedding)
+    try:
+        row_matched = simple_match(embedding)
+        return row_matched
+    except psycopg2.Error as e:
+        print('Error fetching from database: ', e)
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
