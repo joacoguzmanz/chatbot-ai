@@ -34,7 +34,7 @@ def answer_with_completion(user_query):
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_query}
         ],
-        max_tokens=350,
+        max_tokens=450,
     )
 
     return completion.choices[0].message.content
