@@ -1,7 +1,5 @@
 <h1 align="center">AI PDF Chatbot</h1>
 
----
-
 <p align="center">This project is a chatbot that can answer questions from a PDF file.</p>
 
 ## Project status
